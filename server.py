@@ -3,9 +3,13 @@ from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from huggingface_hub import login
+import os
 
-login("")
+load_dotenv()
+
+login(os.getenv('HUGGINGFACE_TOKEN'))
 
 # Initialize app
 app = FastAPI()
@@ -20,9 +24,14 @@ app.add_middleware(
 )
 
 # Load model
-model_name = "google/gemma-2b-it"  # or your model
+model_name = "google/gemma-2b-it"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=torch.float16,
+    low_cpu_mem_usage=True,
+    device_map='cpu'
+)
 
 # Define the request body
 class PromptRequest(BaseModel):
